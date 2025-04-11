@@ -41,15 +41,15 @@
 
 - **Media (Mean)**: Calcula el promedio de todos los intervalos registrados. Es una medida de tendencia central que ayuda a entender cuál es el intervalo típico o esperado.
   
-  \[
-  \text{mean} = \frac{\text{sum}}{\text{tp.Count}}
-  \]
+  
+    - mean = sum / tp.Count
+  
 
 - **Desviación Estándar (Standard Deviation)**: Mide la cantidad de variación o dispersión de los intervalos respecto a la media. Una desviación estándar alta indica que los intervalos varían mucho, mientras que una baja sugiere que están más agrupados alrededor de la media.
   
-  \[
-  \text{stdDev} = \sqrt{\frac{\text{sumSq} - \left(\frac{\text{sum}^2}{\text{tp.Count}}\right)}{\text{tp.Count} - 1}}
-  \]
+  
+     - stdDev = Sqr((sumSq - (sum ^ 2) / tp.Count) / (tp.Count - 1))
+  
 
 Estas métricas permiten comparar el comportamiento actual de los intervalos con lo que se considera normal. Si la variabilidad (desviación estándar) es excesiva en comparación con la media, puede ser un indicativo de que algo inusual está ocurriendo, como un intento de manipulación o trampa.
 
