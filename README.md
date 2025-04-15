@@ -3,17 +3,26 @@
 ## Estructura del Código
 
 ### Constantes
-- **MaxHistory**: Define el número máximo de intervalos que se almacenarán para cada timer.
-- **PatternThreshold**: Umbral que determina si un patrón es sospechoso.
+- **MaxHistory**: Número máximo de intervalos que se almacenarán para cada timer.  
+- **PatternThreshold**: Umbral de sensibilidad que determina cuándo un patrón se considera “sospechoso” en función de la variabilidad.  
+- **MinInterval**: Intervalo mínimo aceptable. Cualquier intervalo menor o igual a este valor se “ignora” por considerarse imposible o muy rápido.  
+- **MaxInterval**: Intervalo máximo aceptable. Si un intervalo supera este valor, se “resetea” el historial, asumiendo que ha habido una pausa demasiado grande.
+
+> **Nota**: Estos parámetros pueden configurarse de forma **global** o de manera **específica** para cada timer.
 
 ### Clase `clsTimerPattern`
-- **Propósito**: Manejar los intervalos de cada timer.
+- **Propósito**: Manejar los intervalos asociados a un **solo** timer (por ejemplo, “Attack”, “UseItem”, etc.).  
 - **Métodos**:
-  - `Initialize`: Configura el array de intervalos.
-  - `ShiftIntervals`: Desplaza los intervalos cuando el historial está lleno.
+  - `Initialize(size)`: Configura el tamaño del array que almacena los intervalos (hasta `MaxHistory`).
+  - `ShiftIntervals()`: Desplaza los intervalos cuando el historial está lleno, liberando espacio para el más reciente.
+  - `Reset()`: Limpia todos los valores almacenados, reiniciando el historial de intervalos.
+
 
 ### Diccionario `TimerPatterns`
-- Almacena instancias de `clsTimerPattern` para cada timer.
+- **Descripción**: Un `Dictionary` que mapea el **índice** de cada timer (TimerIndex) con su instancia correspondiente de `clsTimerPattern`.
+- **Finalidad**: Permitir acceso rápido al historial de intervalos para cada timer.  
+  - Por ejemplo, `TimerPatterns("3")` podría manejar los intervalos del timer “UseItemWithU”.
+
 
 ## Funciones y Subrutinas
 
@@ -36,6 +45,12 @@
 - **`CalculatePatternMetrics`**
   - Calcula la media y la desviación estándar de los intervalos.
   - Usa la fórmula estándar para la desviación estándar.
+
+- **`GetPatternInfo`**
+  - Muestra la **media**, **desviación estándar** y **rango** de intervalos con su tiempo.
+
+- **`ResetAllPatterns`**
+  - ...
 
 ## Explicación de los Cálculos
 
