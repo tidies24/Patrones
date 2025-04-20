@@ -1,82 +1,64 @@
-# Control de Patrones en Timers
+# 🕵️ Guía rápida para GMs  
+**Cómo usar el panel de patrones para detectar posibles cheats**
 
-## Estructura del Código
+| Sección del panel | ¿Qué muestra? | ¿Por qué importa? |
+|-------------------|---------------|-------------------|
+| **Lista de Intervalos** | Cada intervalo (en ms) de la acción seleccionada. | Permite ver si el ritmo es constante, errático o con picos de lag. |
+| **CantidadDeIntervalos** | Nº de muestras acumuladas (máx. 20). | Las métricas se calculan solo cuando hay **≥ 10** intervalos. |
+| **Mínimo / Máximo / Media / Desv. Estándar** | Estadísticas básicas del historial. |  - **Media** ≈ ritmo  en su intervalo<br>- **Desv. Estándar** grande = mucha variación |
+| **Ratio** (`σ / μ`) | Variabilidad relativa del patrón. | Si supera el *Threshold* (0.30) el ritmo es muy irregular. |
+| **Patrón dentro… / ¡ALERTA!** | Resumen en verde/rojo según el ratio. | Verde = normal · Rojo = posible macro / lag anómalo. |
+| **Score** | Suma de 5 métricas (CV alto, flip‑rate, spikes, monotónico, drift). | **Score ≥ 2** dispara alerta; verde = dentro de límites. |
+| **Métricas activas** | Lista de reglas que sumaron puntos. | Explica **por qué** se marcó (“Spikes, Flip‑Rate”, etc.). |
 
-### Constantes
-- **MaxHistory**: Número máximo de intervalos que se almacenarán para cada timer.  
-- **PatternThreshold**: Umbral de sensibilidad que determina cuándo un patrón se considera “sospechoso” en función de la variabilidad.  
-- **MinInterval**: Intervalo mínimo aceptable. Cualquier intervalo menor o igual a este valor se “ignora” por considerarse imposible o muy rápido.  
-- **MaxInterval**: Intervalo máximo aceptable. Si un intervalo supera este valor, se “resetea” el historial, asumiendo que ha habido una pausa demasiado grande.
+---
 
-> **Nota**: Estos parámetros pueden configurarse de forma **global** o de manera **específica** para cada timer.
+## 🛑 ¿Cuándo es sospechoso?
 
-### Clase `clsTimerPattern`
-- **Propósito**: Manejar los intervalos asociados a un **solo** timer (por ejemplo, “Attack”, “UseItem”, etc.).  
-- **Métodos**:
-  - `Initialize(size)`: Configura el tamaño del array que almacena los intervalos (hasta `MaxHistory`).
-  - `ShiftIntervals()`: Desplaza los intervalos cuando el historial está lleno, liberando espacio para el más reciente.
-  - `Reset()`: Limpia todos los valores almacenados, reiniciando el historial de intervalos.
+| Indicador | Valor honesto | **Bandera roja** |
+|-----------|---------------|------------------|
+| **Ratio** | ≤ 0.30 | > 0.30 |
+| **Score** | 0 – 1 | **≥ 2** |
+| **Spikes** | 0 – 1 en 20 muestras | ≥ 2 |
+| **Flip‑Rate** | ≤ 3 cambios de tendencia | > 35 % flips |
+
+> **Regla práctica:** Si cualquier fila está en rojo **y** el jugador mantiene ese estado varios ciclos consecutivos, procede a investigar o sancionar.
+
+---
+
+## Pasos rápidos para el GM
+
+1. Selecciona en la lista el timer a revisar (p. ej. `UseItemWithDblClick`).
+2. Observa el color del resumen:  
+   - Verde → patrón normal.  
+   - Rojo → mira el **Score**.
+3. Si **Score ≥ 2** y “Métricas activas” apunta a macro (CV, Flip) o spikes:  
+   - Pulsa **Solicitar** otra vez para refrescar.  
+   - Si sigue rojo durante ~30 s (3 refrescos), toma nota del usuario.
+4. Examina la **Lista de Intervalos**:  
+   - Números casi idénticos → posible macro.  
+   - Picos aislados → podría ser lag; verifica ping antes de sancionar.
+5. Usa el chat de GM o comando interno para advertir, registrar o expulsar.
+
+---
+
+## ✅ Checklist final antes de actuar
+
+- [ ] ¿Hay **≥ 10** intervalos?  
+- [ ] ¿Ratio > 0.30?  
+- [ ] **Score ≥ 2** marcado en rojo.  
+- [ ] “Métricas activas” indican *macro* (CV, Flip) o *lag* (Spikes).  
+
+---
+
+### 📑 Métricas activas — ¿qué significa cada bandera?
+
+| Métrica | Qué detecta | Interpretación rápida |
+|---------|-------------|-----------------------|
+| **CV Alto** | Coeficiente de variación (σ/μ) supera el umbral. | Ritmo con **demasiada dispersión** → posible auto‑click irregular o lag fuerte. |
+| **Flip‑Rate** | > 35 % de cambios de tendencia entre intervalos. | Patrón **muy errático**; suele indicar spam de teclas con scripts. |
+| **Spikes** | 2 o más intervalos > 2·σ fuera de la media. | **Picos aislados**: lag extremo o manipulación de paquetes. |
+| **Monótono** | Serie siempre creciente o decreciente. | Ritmo **súper constante**; típico de macros “perfectos”. |
+| **Drift** | Media actual se aleja > 2·σ de su baseline personal. | Cambio **sostenido** en la velocidad (puede ser macro recién activado o nueva latencia). |
 
 
-### Diccionario `TimerPatterns`
-- **Descripción**: Un `Dictionary` que mapea el **índice** de cada timer (TimerIndex) con su instancia correspondiente de `clsTimerPattern`.
-- **Finalidad**: Permitir acceso rápido al historial de intervalos para cada timer.  
-  - Por ejemplo, `TimerPatterns("3")` podría manejar los intervalos del timer “UseItemWithU”.
-
-
-## Funciones y Subrutinas
-
-- **`InitializePatterns`**
-  - Inicializa el diccionario con instancias de `clsTimerPattern`.
-  - Cada instancia se configura para manejar un máximo de `MaxHistory` intervalos.
-
-- **`DeInitializePatterns`**
-  - Libera los recursos del diccionario.
-
-- **`AddIntervalToHistory`**
-  - Agrega un nuevo intervalo al historial de un timer específico.
-  - Si el historial está lleno, utiliza `ShiftIntervals` para hacer espacio.
-
-- **`IsPatternSuspicious`**
-  - Evalúa si el patrón de un timer es sospechoso.
-  - Calcula la media y la desviación estándar de los intervalos.
-  - Compara la desviación estándar con `PatternThreshold`.
-
-- **`CalculatePatternMetrics`**
-  - Calcula la media y la desviación estándar de los intervalos.
-  - Usa la fórmula estándar para la desviación estándar.
-
-- **`GetPatternInfo`**
-  - Muestra la **media**, **desviación estándar** y **rango** de intervalos con su tiempo.
-
-- **`ResetAllPatterns`**
-  - ...
-
-## Explicación de los Cálculos
-
-- **Media (Mean)**: Calcula el promedio de todos los intervalos registrados. Es una medida de tendencia central que ayuda a entender cuál es el intervalo típico o esperado.
-  
-  
-    - mean = sum / tp.Count
-  
-
-- **Desviación Estándar (Standard Deviation)**: Mide la cantidad de variación o dispersión de los intervalos respecto a la media. Una desviación estándar alta indica que los intervalos varían mucho, mientras que una baja sugiere que están más agrupados alrededor de la media.
-  
-  
-     - stdDev = Sqr((sumSq - (sum ^ 2) / tp.Count) / (tp.Count - 1))
-  
-
-Estas métricas permiten comparar el comportamiento actual de los intervalos con lo que se considera normal. Si la variabilidad (desviación estándar) es excesiva en comparación con la media, puede ser un indicativo de que algo inusual está ocurriendo, como un intento de manipulación o trampa.
-
-## Ejemplo de Uso
-
-- **Inicialización**: Llama a `InitializePatterns` con el número de timers.
-- **Agregar Intervalos**: Usa `AddIntervalToHistory` para registrar cada nuevo intervalo.
-- **Detección de Patrones**: Llama a `IsPatternSuspicious` para verificar si un patrón es anómalo.
-
-## Consideraciones
-
-- **Flexibilidad**: Puedes ajustar `PatternThreshold` para cambiar la sensibilidad del sistema.
-- **Mantenimiento**: La estructura modular facilita la extensión y mantenimiento del código.
-
-Este sistema permite detectar comportamientos sospechosos basados en la variabilidad de los intervalos de tiempo, proporcionando un mecanismo efectivo para el control de trampas en juegos o aplicaciones similares.
