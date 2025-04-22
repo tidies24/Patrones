@@ -21,6 +21,13 @@
 | ≈ 20‑30 ms   | puede ser adaptación natural (lag, cansancio, nuevo teclado) | Revise sólo si coincide con otras métricas.|
 | > 2 · σ      | Anti natural | cambio brusco y sostenido: posible macro o script.|
 
+> • **Regla** práctica para GMs
+
+> • **Drift alto** + otra métrica fuerte (CV alto, monotónico, flip‑rate) → investigar.
+
+> • **Drift solo** sin otros indicadores, suele ser un ajuste temporal del jugador o del ping.
+---
+
 ## 🛑 ¿Cuándo es sospechoso?
 
 | Indicador | Valor honesto | **Bandera roja** |
