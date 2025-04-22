@@ -8,10 +8,18 @@
 | **Mínimo / Máximo / Media / Desv. Estándar** | Estadísticas básicas del historial. |  - **Media** ≈ ritmo  en su intervalo<br>- **Desv. Estándar** grande = mucha variación |
 | **Ratio** (`σ / μ`) | Variabilidad relativa del patrón. | Si supera el *Threshold* (0.30) el ritmo es muy irregular. |
 | **Patrón dentro… / ¡ALERTA!** | Resumen en verde/rojo según el ratio. | Verde = normal · Rojo = posible macro / lag anómalo. |
-| **Score** | Suma de 5 métricas (CV alto, flip‑rate, spikes, monotónico, drift). | **Score ≥ 2** dispara alerta; verde = dentro de límites. |
-| **Métricas activas** | Lista de reglas que sumaron puntos. | Explica **por qué** se marcó (“Spikes, Flip‑Rate”, etc.). |
+| **Score** | Suma de 5 métricas (CV alto, flip‑rate, spikes, monotónico, drift). | **Score ≥ Umbral** dispara alerta; verde = dentro de límites. |
+| **Métricas activas** | Lista de reglas que sumaron puntos. | Explica **por qué** se marcó (“Spikes, Flip‑Rate”,"Drift", etc.). |
+| **Umbral dinámico (effTh)** | (0.3 + 0.2 × incompletitud). | Evita falsos positivos cuando el historial está a medio llenar.|
+| **Baseline µ** | Media de referencia personal (EWMA). | Se ajusta al estilo del jugador; sirve para detectar cambios sospechosos a largo plazo.
+| **Drift ** | Diferencia absoluta entre la media recién medida (µ) y la Baseline µ que el sistema fue aprendiendo de ese mismo jugador. |  --- |
 
----
+## 🛑 ¿Drift?
+| Indicador | Valor | **Accion** |
+|-----------|---------------|------------------|
+| ≤ 10 ms      | totalmente normal| Nada..
+| ≈ 20‑30 ms   | puede ser adaptación natural (lag, cansancio, nuevo teclado) | Revise sólo si coincide con otras métricas.|
+| > 2 · σ      | Anti natural | cambio brusco y sostenido: posible macro o script.|
 
 ## 🛑 ¿Cuándo es sospechoso?
 
